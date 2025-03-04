@@ -1,0 +1,64 @@
+{
+  "name": "jwt-auth-api-stack",
+  "version": "1.0.0",
+  "description": "sistema de authentication con jwt",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "nodemon",
+    "build": "tsc",
+    "build-doc": "ts-node docs/build-doc.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guillermo-mendez/jwt-auth-api-stack.git"
+  },
+  "keywords": [
+    "nodejs"
+  ],
+  "author": "Guillermo Mendez",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/guillermo-mendez/jwt-auth-api-stack/issues"
+  },
+  "homepage": "https://github.com/guillermo-mendez/jwt-auth-api-stack#readme",
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.750.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.3.1",
+    "express": "^4.21.2",
+    "express-async-handler": "^1.2.0",
+    "jose": "^5.6.3",
+    "moment": "^2.30.1",
+    "mongoose": "^8.10.0",
+    "morgan": "^1.10.0",
+    "node-cron": "^3.0.3",
+    "string-template": "^1.0.0",
+    "uuid": "^9.0.0",
+    "yup": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/compression": "^1.7.5",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.17.10",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemon": "^1.19.6",
+    "@types/string-template": "^1.0.6",
+    "@types/swagger-jsdoc": "^6.0.1",
+    "@types/swagger-ui-express": "^4.1.3",
+    "@types/uuid": "^9.0.8",
+    "helmet": "^7.2.0",
+    "nodemon": "^2.0.22",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^4.6.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}

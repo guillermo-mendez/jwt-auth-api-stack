@@ -1,0 +1,14 @@
+#Cerrar sesión del usuario autenticado
+/api/auth/logout:
+  post:
+    tags:
+      - Auth
+    security: 
+      - bearerAuth: []
+    description: logout
+    summary: logout del usuario autenticado
+    produces:
+      - application/json
+    responses:
+      200:
+        description: Success

@@ -1,0 +1,14 @@
+#Actualizar token
+/provisions/api/v1/auth/refreshToken:
+  post:
+    tags:
+      - Auth
+    produces:
+      - application/json
+    security: 
+      - bearerAuth: []
+    description: refresh token
+    summary: Actualizar token
+    responses:
+      200:
+        description: Success

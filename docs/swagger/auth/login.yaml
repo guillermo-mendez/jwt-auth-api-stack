@@ -1,0 +1,33 @@
+#componente de autenticación 
+components:
+  securitySchemes:
+    bearerAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+#Login usuarios
+/api/auth/login:
+  post:
+    tags:
+      - Auth
+    security: []
+    produces:
+      - application/json
+    description: Login
+    summary: Autenticar usuario
+    requestBody:
+      content:
+        'application/json':
+          schema:
+            properties:
+                email:
+                  type: string
+                  example: 'admin@gmail.com'
+                password:
+                  type: string
+                  example: 'Test1234*'
+            required:
+              - email
+              - password
+    responses:
+      200:
+        description: Success
