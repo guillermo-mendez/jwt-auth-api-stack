@@ -12,6 +12,7 @@ import routers from './routers-setting';
 import {AwsSecretsManagerService} from "./lib/services/AwsSecretsManagerService";
 import {scheduleKeyRotation} from "./jobs/rotate.job";
 import {ENVIRONMENT, PORT_APP} from "./config/environment";
+import {createAdminUser} from "./seeds/seedAdmin";
 
 
 const app = express();
@@ -58,7 +59,7 @@ export class ServerSettings {
 
   private static middlewares() {
     app.use(helmet()); // Helmet para seguridad
-   // app.use(authentication); // Middleware de autenticación
+    app.use(AuthMiddleware); // Middleware de autenticación
     app.use(express.json({limit: '50mb'})); // Parse application/json request body
   }
 
@@ -82,8 +83,14 @@ export class ServerSettings {
  private static async testDatabaseConnection(): Promise<void> {
     await Connect.connectDB(); // Conexión a MongoDB
     await Connect.testConnection(); // Probar conexión
+    await this.seedDatabase(); // Sembrar la base de datos
     this.routes();
   };
+
+ private static async seedDatabase() {
+   // Ejecutar el seed
+   await createAdminUser();
+ }
 
 
   private static routes() {

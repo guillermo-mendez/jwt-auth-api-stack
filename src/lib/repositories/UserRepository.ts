@@ -1,5 +1,6 @@
 import User, {IUser} from "../../models/User";
 import moment from "moment/moment";
+import Session from "../../models/Session";
 
 
 export class UserRepository {
@@ -88,7 +89,8 @@ export class UserRepository {
   }
 
   static async softDeleteUser(userId: string) {
-    return User.findByIdAndUpdate(userId, {deletedAt: new Date()}, {new: true});
+    await Session.deleteMany({userId});
+    return User.findByIdAndUpdate(userId, {deletedAt: new Date(), status: 'inactive'}, {new: true});
   };
 
   static async userExists(identification?: string, email?: string) {

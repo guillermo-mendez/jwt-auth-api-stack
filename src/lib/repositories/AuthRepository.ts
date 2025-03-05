@@ -125,6 +125,7 @@ export class AuthRepository {
 
     // Hashear y actualizar la nueva contraseña (si se proporciona)
     if (newPassword) {
+      user.password = newPassword;
       await user.save(); // Guardar los cambios
     } else if (newEmail) {
       await User.findByIdAndUpdate(userId, {email: newEmail}, {new: true});
@@ -175,7 +176,7 @@ export class AuthRepository {
 
       // Desencriptar el token con jwtDecrypt
       const payload = await TokenService.decryptJweToken(token);
-
+      const userId = payload.userId;
       // Verificar que el payload contenga jti y exp
       if (!payload.jti || !payload.exp) {
         // return res.status(400).json({ ok: false, error: "Token inválido: faltan campos" });
@@ -183,6 +184,7 @@ export class AuthRepository {
 
       // Aquí llamas a tu función para revocar el token usando payload.jti y payload.exp
       await revokeToken(payload.jti as string, payload.exp as number);
+      await Session.deleteMany({userId});
       return {ok: true, message: "Token revocado exitosamente"}
     } catch (error: any) {
       throw new Error(error.message);

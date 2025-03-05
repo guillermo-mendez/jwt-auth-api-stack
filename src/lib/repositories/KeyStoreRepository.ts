@@ -20,11 +20,13 @@ export class KeyStoreRepository {
       if (!privateKeyPem) {
         throw new Error("No se encontró ninguna clave en AWS Secrets Manager.");
       }
+
       // Obtener el KeyRecord actual en MongoDB (para obtener el kid correspondiente a esta clave)
       const record = await KeyRecord.findOne({isCurrent: true}).select("kid").lean();
       if (!record) {
         throw new Error("No hay un KeyRecord actual en la base de datos.");
       }
+
       return {kid: record.kid, privateKeyPem};
     } catch (error: any) {
       console.error("Error obteniendo la clave actual:", error.message);

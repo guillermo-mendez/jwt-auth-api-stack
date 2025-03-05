@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import { AwsSecretsManagerService } from "./AwsSecretsManagerService";
-import KeyRecord from "../../models/KeyRecord";
 import dayjs from "dayjs";
 import { KEY_ROTATION_DAYS } from "../../config/environment";
 import {KeyStoreRepository} from "../repositories/KeyStoreRepository";

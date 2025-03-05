@@ -21,7 +21,7 @@ export class AwsSecretsManagerService {
    * @throws Error si hay un problema distinto de "ResourceNotFoundException".
    */
   static async initSecretIfNotExists() {
-    const client =AwsSecretsManagerConfigService.getClient();
+    const client = AwsSecretsManagerConfigService.getClient();
     try {
       // Verificar si existe
       const command = new GetSecretValueCommand({ SecretId: SECRETS_NAME });

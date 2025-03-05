@@ -147,7 +147,13 @@ export class TokenService {
       // 5) Desencriptar el token JWE
       const { payload } = await jwtDecrypt(jweToken, privateKeyObj);
 
-      console.log("Token desencriptado:", payload);
+      // console.log("Token desencriptado:", payload);
+
+      // 6) Verificar si el token ha sido revocado
+      const isRevoked = await isTokenRevoked(payload.jti as string);
+      if (payload.jti && isRevoked) {
+        throw new Error("El token ha sido revocado");
+      }
 
       return payload as Record<string, any>;
     } catch (error) {

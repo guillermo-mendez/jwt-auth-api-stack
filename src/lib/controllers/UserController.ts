@@ -94,6 +94,8 @@ export class UserController {
         return;
       }
 
+      await UserRepository.revokeUserTokens(userId);
+
       const users = await UserRepository.getUsers();
       res.status(200).json({ statusCode: 200, success: true, message: "Usuario eliminado", data:users });
 

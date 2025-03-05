@@ -1,4 +1,4 @@
-import RevokedToken, { IRevokedToken } from "../../models/RevokedToken";
+import RevokedToken from "../../models/RevokedToken";
 
 /**
  * Revoca un token almacenando su `jti` y la fecha de expiración en la base de datos.
