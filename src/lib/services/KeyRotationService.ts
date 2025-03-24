@@ -17,7 +17,7 @@ export class KeyRotationService {
    * 2. Genera un nuevo par RSA y sube la privateKey a Secrets Manager.
    * 3. Almacena la clave previa en KeyRecord, con expireAt (opcional).
    */
-  static async rotateKeys(): Promise<void> {
+  static async rotateKeys(): Promise<{ message: string }> {
     let oldKeyPem: string | null = null;
     let oldKeyKid: string | null = null;
 
@@ -76,5 +76,6 @@ export class KeyRotationService {
         expireAt: dayjs().add(KEY_ROTATION_DAYS, "day").toDate()
       });
     console.log(`Nueva clave RSA generada con kid=${newKid} y almacenada`);
+    return {message: "Key rotation executed successfully"};
   }
 }

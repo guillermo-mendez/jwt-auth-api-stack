@@ -21,10 +21,10 @@ components:
             properties:
                 email:
                   type: string
-                  example: 'admin@gmail.com'
+                  example: 'admin@example.com'
                 password:
                   type: string
-                  example: 'Test1234*'
+                  example: 'admin12345'
             required:
               - email
               - password

@@ -100,7 +100,7 @@ export class AuthRepository {
       // Revocar el token: guarda el jti y exp en la base de datos
       await revokeToken(payload.jti as string, payload.exp as number);
 
-      return { ok: true, message: "Token revocado manualmente" };
+      return {message: "Token revocado exitosamente" };
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -145,7 +145,7 @@ export class AuthRepository {
    */
   static async revokeAllUserTokens() {
     await User.updateMany({}, { $inc: { tokenVersion: 1 } });
-    console.log("Tokens revocados para todos los usuarios.");
+    return {message:"Tokens revocados para todos los usuarios"};
   }
 
   /**
@@ -163,29 +163,27 @@ export class AuthRepository {
     return {message: `Secreto ${SECRETS_NAME} eliminado correctamente.`};
   }
 
-  static async logout(token: string) {
-    // await Session.deleteOne({accessToken});
-    // return {message: "Sesión cerrada exitosamente"};
-
+  static async logout(accessToken: string) {
     try {
-      // const authHeader = req.header("Authorization");
-      // if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      //   return res.status(401).json({ ok: false, error: "Token requerido" });
-      // }
-      // const token = authHeader.replace("Bearer ", "");
 
       // Desencriptar el token con jwtDecrypt
-      const payload = await TokenService.decryptJweToken(token);
+      const payload = await TokenService.decryptJweToken(accessToken);
+      if(payload && payload.message){
+        return {message: payload.message};
+      }
       const userId = payload.userId;
       // Verificar que el payload contenga jti y exp
       if (!payload.jti || !payload.exp) {
-        // return res.status(400).json({ ok: false, error: "Token inválido: faltan campos" });
+        throw new Error("Token inválido: faltan campos");
       }
+
+      await Session.deleteOne({accessToken});
 
       // Aquí llamas a tu función para revocar el token usando payload.jti y payload.exp
       await revokeToken(payload.jti as string, payload.exp as number);
       await Session.deleteMany({userId});
-      return {ok: true, message: "Token revocado exitosamente"}
+      return {message: "Sesión cerrada exitosamente"};
+
     } catch (error: any) {
       throw new Error(error.message);
     }

@@ -28,12 +28,22 @@ const AuthMiddleware = async (req: Request, res: Response, next: NextFunction): 
   }
 
   if (!req.headers['authorization']) {
-    return res.status(403).json({statusText: 'Api not authorized, invalid header'});
+    return res.status(403).json({
+      statusCode: 403,
+      success: false,
+      statusText: 'Api not authorized, invalid header',
+      data: null
+    });
   }
 
   const accessToken = req.headers['authorization'].replace('Bearer ', '');
   if (!accessToken) {
-    return res.status(403).json({statusText: 'Invalid authentication token'});
+    return res.status(403).json({
+      statusCode: 403,
+      success: false,
+      statusText: 'Invalid authentication token',
+      data: null
+    });
   }
 
   try {
@@ -41,14 +51,24 @@ const AuthMiddleware = async (req: Request, res: Response, next: NextFunction): 
     // Buscar al usuario en la DB para obtener el tokenVersion actual
     const user = await UserRepository.getUserByUserId(payload.userId);
     if (!user || user.tokenVersion !== payload.tokenVersion) {
-      return res.status(401).json({ok: false, error: "Token has been revoked"});
+      return res.status(401).json({
+        statusCode: 401,
+        success: false,
+        statusText: 'El token ha sido revocado, inicie sesión nuevamente',
+        data: null
+      });
     }
 
     (req as any).userId = payload.userId;
     next();
 
-  } catch (error) {
-    return res.status(403).json({statusText: 'Internal error authentication failed'});
+  } catch (error: any) {
+    return res.status(403).json({
+      statusCode: 403,
+      success: false,
+      statusText: error.message,
+      data: null
+    });
   }
 
 };

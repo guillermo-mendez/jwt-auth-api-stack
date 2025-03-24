@@ -1,0 +1,111 @@
+/api/user/update/{userId}:
+  put:
+    tags:
+      - User
+    summary: Actualización de usuario
+    description: Endpoint para actualizar la información de un usuario por su ID.
+    produces:
+      - application/json
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: userId
+        required: true
+        description: ID del usuario a actualizar
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              identification:
+                type: string
+                example: 1234567890
+              firstName:
+                type: string
+                example: Pedro
+              lastName:
+                type: string
+                example: Mendez
+              phone:
+                type: string
+                example: 3126560125
+              role:
+                type: string
+                example: admin
+    responses:
+      200:
+        description: Respuesta exitosa de actualización
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statusCode:
+                  type: number
+                  example: 200
+                success:
+                  type: boolean
+                  example: true
+                statusText:
+                  type: string
+                  example: User updated successfully
+                data:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                        example: 1234
+                      identification:
+                        type: string
+                        example: 1234567890
+                      firstName:
+                        type: string
+                        example: Pedro
+                      lastName:
+                        type: string
+                        example: Mendez
+                      phone:
+                        type: string
+                        example: 3126560125
+                      email:
+                        type: string
+                        example: pedro.mendez@example.com
+                      role:
+                        type: string
+                        example: admin
+                      createdAt:
+                        type: string
+                        example: 2024-03-23T10:15:30Z
+                      updatedAt:
+                        type: string
+                        example: 2024-03-23T10:25:00Z
+      403:
+        description: Error en la solicitud
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statusCode:
+                  type: number
+                  example: 403
+                success:
+                  type: boolean
+                  example: false
+                statusText:
+                  type: string
+                  example: Error en la autenticación. Inténtalo nuevamente.
+                data:
+                  type: object
+                  example: null
+      401:
+        description: No autorizado (token inválido o expirado)
+      500:
+        description: Error interno del servidor

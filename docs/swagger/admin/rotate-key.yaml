@@ -1,0 +1,13 @@
+/api/admin/rotate-key:
+ post:
+   tags:
+     - Admin
+   security:
+     - bearerAuth: []
+   produces:
+     - application/json
+   summary: Rotar llave de seguridad
+   description: Rotar llave de seguridad
+   responses:
+     200:
+       description: Un objeto JSON

@@ -8,6 +8,7 @@ import {
 } from "../../config/environment";
 import {isTokenRevoked} from "../repositories/TokenRevocationRepository";
 import parseDuration from "../../utils/parseDuration";
+import {TOKEN_TYPES} from "../../constants";
 
 /**
  * Este servicio se encarga de encriptar y desencriptar un token (por ejemplo, un Refresh Token).
@@ -36,10 +37,15 @@ export class TokenService {
     // 3) Genera un jti único
     const jti = uuidv4();
 
-    // 4) Cifrar con kid en el header con jose
+    const tokenType = TOKEN_TYPES.ACCESS_TOKEN; // 🔹 Campo para identificar el tipo de token
+
+    // 4) Agregar un campo para identificar el tipo de token
+    payload.tokenType = tokenType;
+
+    // 5) Cifrar con kid en el header con jose
     const expAccessToken = Math.floor((Date.now() + parseDuration(ACCESS_TOKEN_EXPIRATION)) / 1000); // Segundos
     const jwe = await new EncryptJWT({...payload, jti})
-      .setProtectedHeader({alg: "RSA-OAEP", enc: "A256GCM", kid})
+      .setProtectedHeader({alg: "RSA-OAEP", enc: "A256GCM", kid, tokenType})
       .setIssuedAt() // agrega el claim 'iat' con la fecha/hora actual en segundos
       .setIssuer('https://citruxtec.com') // 'iss' quien emite el token
       .setAudience('https://citruxtec.com/myservice') // 'aud' para quién va destinado
@@ -79,12 +85,16 @@ export class TokenService {
     // 3) Genera un jti único
     const jti = uuidv4();
 
-    // 4) Cifrar con kid en el header con jose
+    const tokenType = TOKEN_TYPES.REFRESH_TOKEN; // 🔹 Campo para identificar el tipo de token
 
+    // 4) Agregar un campo para identificar el tipo de token
+    payload.tokenType = tokenType
+
+    // 5) Cifrar con kid en el header con jose
     const expRefreshToken: number = Math.floor((Date.now() + parseDuration(REFRESH_TOKEN_EXPIRATION)) / 1000); // Segundos
     // const iat = Math.floor(Date.now() / 1000);
     const jwe = await new EncryptJWT(payload)
-      .setProtectedHeader({alg: "RSA-OAEP", enc: "A256GCM", kid})
+      .setProtectedHeader({alg: "RSA-OAEP", enc: "A256GCM", kid, tokenType})
       .setIssuedAt() // agrega el claim 'iat' con la fecha/hora actual en segundos
       .setSubject(payload.userId) // 'sub', el sujeto del token a menudo el userId
       .setNotBefore("10s") // (Opcional) claim 'nbf', indica cuándo el token se vuelve válido (Ejemplo: no antes de 10 segundos desde ahora)
@@ -98,6 +108,20 @@ export class TokenService {
     };
   }
 
+  static verifyTokenType(payload: any): string {
+
+      if (payload.tokenType === TOKEN_TYPES.ACCESS_TOKEN) {
+        console.log("🔹 Es un Access Token");
+        return TOKEN_TYPES.ACCESS_TOKEN;
+      } else if (payload.tokenType === TOKEN_TYPES.REFRESH_TOKEN) {
+        console.log("🔹 Es un Refresh Token");
+        return TOKEN_TYPES.REFRESH_TOKEN;
+      } else {
+        console.warn("⚠️ El token no tiene un tipo definido.");
+        throw new Error("❌ Error al verificar el tipo de token: Token invalido, no tiene un tipo definido");
+      }
+  }
+
   /**
    * Descifra un token JWE. Si no puede con la clave actual, busca la antigua.
    * @param jweToken Token encriptado con RSA-OAEP + A256GCM
@@ -108,6 +132,9 @@ export class TokenService {
     try {
       // 1) Extraer el header del token JWE para obtener el `kid`
       const header = decodeProtectedHeader(jweToken);
+      console.log("Header del token:", header);
+
+      this.verifyTokenType(header);
 
       if (!header.kid || typeof header.kid !== "string") {
         throw new Error("Token no contiene un 'kid' válido.");
@@ -116,27 +143,29 @@ export class TokenService {
       let privateKeyPem: string | null = null;
       let source: "AWS" | "MongoDB" | "None" = "None"; // Para depuración
 
-      try {
         // 2) Intentar obtener la clave desde AWS Secrets Manager
         const awsKeyRecord = await KeyStoreRepository.getCurrentKeyRecord();
 
-        // Verificar si el kid de AWS es el mismo que el del token
+        // 3) Verificar si el kid de AWS es el mismo que el del token
         if (awsKeyRecord.kid === header.kid) {
           privateKeyPem = awsKeyRecord.privateKeyPem;
           source = "AWS";
+        } else {
+          // 4) Si la clave de AWS no coincide con el `kid` del token, buscar la clave en MongoDB
+          const keyRecord = await KeyStoreRepository.getPrivateKeyByKid(header.kid);
+          if (keyRecord) {
+            privateKeyPem = keyRecord.privateKeyPem;
+            source = "MongoDB";
+          }
         }
-      } catch (error: any) {
-        console.warn(`Error obteniendo clave de AWS Secrets Manager: ${error.message}`);
+
+      if (!privateKeyPem) {
+        throw new Error(`No se encontró ninguna clave privada para kid=${header.kid}`);
       }
 
-      // 3) Si la clave de AWS no coincide con el `kid` del token, buscar la clave en MongoDB
-      if (!privateKeyPem) {
-        const keyRecord = await KeyStoreRepository.getPrivateKeyByKid(header.kid)
-        if (!keyRecord) {
-          throw new Error(`No se encontró ninguna clave privada para kid=${header.kid}`);
-        }
-        privateKeyPem = keyRecord.privateKeyPem;
-        source = "MongoDB";
+      // Convertir la clave a formato PKCS8 si es necesario
+      if (!privateKeyPem.includes("BEGIN PRIVATE KEY")) {
+        privateKeyPem = `-----BEGIN PRIVATE KEY-----\n${privateKeyPem}\n-----END PRIVATE KEY-----`;
       }
 
       console.log(`Usando clave de ${source} para desencriptar el token con kid=${header.kid}`);
@@ -146,19 +175,35 @@ export class TokenService {
 
       // 5) Desencriptar el token JWE
       const { payload } = await jwtDecrypt(jweToken, privateKeyObj);
+     // console.log("Token desencriptado:", payload);
 
-      // console.log("Token desencriptado:", payload);
+      // 6) Verificar si el token es un Access Token o Refresh Token
+      this.verifyTokenType(payload);
 
-      // 6) Verificar si el token ha sido revocado
+
+      // 7) Verificar si el token ha sido revocado
       const isRevoked = await isTokenRevoked(payload.jti as string);
       if (payload.jti && isRevoked) {
-        throw new Error("El token ha sido revocado");
+        return {message: 'El token ha sido revocado, inicie sesión nuevamente'};
       }
 
       return payload as Record<string, any>;
-    } catch (error) {
+
+    } catch (error: any) {
+      // ✅ Manejo de error específico para token expirado
+      console.log(error.code, error.payload);
+      if (error.code === "ERR_JWT_EXPIRED") {
+       // console.error("⏳ Token expirado:", error);
+        const isRevoked = await isTokenRevoked(error.payload.jti as string);
+        if (error.payload.jti && isRevoked) {
+          return {message: 'El token ha sido revocado, inicie sesión nuevamente'};
+        }
+       // throw new Error("El token ha expirado. Por favor, inicia sesión nuevamente.");
+      }
+
+      // ✅ Manejo de error genérico
       console.error("Error al desencriptar JWE:", error);
-      throw new Error("Error al desencriptar el token JWE");
+      throw new Error("Error en la autenticación. Inténtalo nuevamente.");
     }
   }
 

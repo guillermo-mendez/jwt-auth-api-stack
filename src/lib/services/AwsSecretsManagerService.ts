@@ -27,11 +27,24 @@ export class AwsSecretsManagerService {
       const command = new GetSecretValueCommand({ SecretId: SECRETS_NAME });
       const response = await client.send(command);
 
-     // Asegurar que el secreto está en MongoDB
-      const existingKey = await KeyStoreRepository.getCurrentKeyRecord();
-      if (!existingKey) {
-        console.log("⚠️ No hay KeyRecord en MongoDB, agregando clave...");
+      try {
+        // Asegurar que el secreto está en MongoDB
+        const existingKey = await KeyStoreRepository.getCurrentKeyRecord();
+        if (!existingKey) {
+          console.log("⚠️ No hay KeyRecord en MongoDB, agregando clave...");
 
+          // Crear un nuevo KeyRecord en MongoDB
+          await KeyStoreRepository.createKeyRecord({
+            kid: `kid-${Date.now()}`,
+            version: Date.now(),
+            privateKeyPem: response.SecretString,
+            isCurrent: true,
+            expireAt: dayjs().add(KEY_ROTATION_DAYS, "day").toDate(),
+          });
+          console.log("✅ Clave agregada a MongoDB correctamente.");
+        }
+
+      } catch (err) {
         // Crear un nuevo KeyRecord en MongoDB
         await KeyStoreRepository.createKeyRecord({
           kid: `kid-${Date.now()}`,
@@ -42,6 +55,7 @@ export class AwsSecretsManagerService {
         });
         console.log("✅ Clave agregada a MongoDB correctamente.");
       }
+
       // Si no lanza error, significa que ya existe => no hacemos nada
     } catch (error: any) {
       if (error.name === "ResourceNotFoundException") {

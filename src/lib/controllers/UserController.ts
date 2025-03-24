@@ -5,22 +5,30 @@ import {UserRepository} from "../repositories/UserRepository";
 
 export class UserController {
 
-
-  static async getUsers(req: Request, res: Response) {
+  static async getUsers(req: Request, res: Response):Promise<any> {
     try {
       const users = await UserRepository.getUsers();
-      res.status(200).json({statusCode: 200, success: true, message: "Usuario encontrado", data: users});
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText: "Usuario encontrado",
+        data: users
+      });
     } catch (error: any) {
-      res.status(400).json({ statusCode: 400, success: false, message: error.message, data:null });
+      return res.status(400).json({ statusCode: 400, success: false, statusText: error.message, data:null });
     }
   }
 
-  static async getUserByUserId(req: Request, res: Response) {
+  static async getUserByUserId(req: Request, res: Response):Promise<any> {
     try {
       const user = await UserRepository.getUserByUserId(req.params.userId);
       if(!user) {
-        res.status(404).json({statusCode: 404, success: true, message: "Usuario no encontrado", data: null});
-        return;
+        return res.status(404).json({
+          statusCode: 404,
+          success: true,
+          statusText: "Usuario no encontrado",
+          data: null
+        });
       }
 
        const formattedUser = {
@@ -32,75 +40,113 @@ export class UserController {
          email: user.email,
          createdAt: moment(user.createdAt).format("YYYY-MM-DD HH:mm:ss")
        };
-      res.status(200).json({statusCode: 200, success: true, message: "Usuario encontrado", data: formattedUser});
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText: "Usuario encontrado",
+        data: formattedUser
+      });
 
     } catch (error: any) {
-      res.status(500).json({ statusCode: 500, success: false, message: error.message, data:null });
+      return res.status(500).json({ statusCode: 500, success: false, statusText: error.message, data:null });
     }
   }
 
-  static async revokeUserTokens(req: Request, res: Response) {
+  static async revokeUserTokens(req: Request, res: Response):Promise<any> {
     try {
       await UserRepository.revokeUserTokens(req.params.userId);
-      res.status(200).json({ statusCode: 200, success: true, message: "Tokens revocados", data:null });
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText: "Tokens revocados",
+        data:null
+      });
+
     } catch (error:any) {
-      res.status(400).json({ statusCode: 400, success: false, message: error.message, data:null });
+      return res.status(400).json({ statusCode: 400, success: false, statusText: error.message, data:null });
     }
   }
 
-  static async registerUser(req: Request, res: Response) {
+  static async registerUser(req: Request, res: Response):Promise<any> {
     try {
       await UserRepository.registerUser(req.body);
 
       const users = await UserRepository.getUsers();
-      res.status(200).json({ statusCode: 200, success: true, message: "Usuario registrado", data:users });
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText: "Usuario registrado",
+        data:users
+      });
 
     } catch (error:any) {
-      res.status(400).json({ statusCode: 400, success: false, message: error.message, data:null });
+      return res.status(400).json({ statusCode: 400, success: false, statusText: error.message, data:null });
     }
   }
 
-  static async updateUser(req: Request, res: Response) {
+  static async updateUser(req: Request, res: Response):Promise<any> {
     try {
       const userId = req.params.userId;
 
       const updatedUser = await UserRepository.updateUserById(userId, req.body);
       if(!updatedUser) {
-        res.status(500).json({statusCode: 500, success: false, message: "Error al actualizar el usuario", data: null});
-        return;
+        return res.status(500).json({
+          statusCode: 500,
+          success: false,
+          statusText: "Error al actualizar el usuario",
+          data: null
+        });
       }
 
       const users = await UserRepository.getUsers();
-      res.status(200).json({ statusCode: 200, success: true, message: "Usuario actualizado", data:users });
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        message: "Usuario actualizado",
+        data:users
+      });
 
     } catch (error:any) {
-      res.status(500).json({ statusCode: 500, success: false, message: error.message, data:null });
+      return res.status(500).json({ statusCode: 500, success: false, statusText: error.message, data:null });
     }
   }
 
-  static async deleteUser(req: Request, res: Response) {
+  static async deleteUser(req: Request, res: Response):Promise<any> {
     try {
       const userId = req.params.userId;
 
       const user = await UserRepository.getExistsUserById(userId);
       if(!user) {
-        res.status(404).json({statusCode: 404, success: false, message: "Usuario no encontrado", data: null});
-        return;
+        return res.status(404).json({
+          statusCode: 404,
+          success: false,
+          statusText: "Usuario no encontrado",
+          data: null
+        });
       }
 
       const updatedUser = await UserRepository.softDeleteUser(userId);
       if(!updatedUser) {
-        res.status(500).json({statusCode: 500, success: false, message: "Error al eliminar usuario", data: null});
-        return;
+        return res.status(500).json({
+          statusCode: 500,
+          success: false,
+          statusText: "Error al eliminar usuario",
+          data: null
+        });
       }
 
       await UserRepository.revokeUserTokens(userId);
 
       const users = await UserRepository.getUsers();
-      res.status(200).json({ statusCode: 200, success: true, message: "Usuario eliminado", data:users });
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText: "Usuario eliminado",
+        data:users
+      });
 
     } catch (error:any) {
-      res.status(500).json({ statusCode: 500, success: false, message: error.message, data:null });
+      return res.status(500).json({ statusCode: 500, success: false, statusText: error.message, data:null });
     }
   }
 

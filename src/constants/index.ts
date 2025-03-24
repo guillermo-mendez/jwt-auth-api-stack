@@ -11,11 +11,9 @@ export const ENDPOINTS_WITH_AUTHORIZATION = [
   '/api/user/createPassword',
   '/api/user/forgotPassword',
 ];
-
-export const BASE_ENDPOINT = '/api';
-
-export const ROLES = {
-  ADMINISTRADOR: 'Administrador',
-};
-
 export const BCRYPT_SALT_ROUNDS = 10;
+
+export const TOKEN_TYPES = {
+  ACCESS_TOKEN: 'accessToken',
+  REFRESH_TOKEN: 'refreshToken',
+}

@@ -35,7 +35,10 @@ export class UserRepository {
     if (!user) {
       throw new Error("Usuario no encontrado");
     }
-    return User.findByIdAndUpdate(userId, {$inc: {tokenVersion: user.tokenVersion + 1}}, {new: true});
+    return User.findByIdAndUpdate(
+      userId,
+      { $inc: { tokenVersion: 1 } }, // Incrementa el tokenVersion
+      {new: true});
   }
 
 

@@ -1,0 +1,20 @@
+/api/user/deleted/{userId}:
+ delete:
+   tags:
+     - User
+   security:
+     - bearerAuth: []
+   parameters:
+     - in: path
+       name: userId
+       required: true
+       description: ID del usuario a eliminar
+       schema:
+         type: string
+   produces:
+     - application/json
+   summary: Eliminar usuario
+   description: Metodo para eliminar usuario
+   responses:
+     200:
+       description: Success

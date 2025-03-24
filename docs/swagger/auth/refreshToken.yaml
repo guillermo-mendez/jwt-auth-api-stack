@@ -1,14 +1,23 @@
 #Actualizar token
-/provisions/api/v1/auth/refreshToken:
+/api/auth/refreshToken:
   post:
     tags:
       - Auth
     produces:
       - application/json
-    security: 
-      - bearerAuth: []
-    description: refresh token
     summary: Actualizar token
+    description: refresh token
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              refreshToken:
+                type: string
+                example: eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00iLCJraWQiOiJraWQtMTc0MTEzMTQ2MjgyNCJ9.bsKhPZUP0VaZ9dzJCbxQ8n7CEOHANUuV-g30SCoLqqnIFQWgh8iB8U-L_mrwrAIYO0_awWjWdoZ6eJ7D6hGFzmWrx_JPXy3bgYFQuMwiseRlrcDBHsRzEEjJOyIv4ehZ2YCuwhz6FgKpK3OCjnTue3X0h1ebH2T8AI7C3R_1MU1tOyFKRgPDVx2GWR4ePeipu9Z0El6KExraht8c4lqnvwe7HoLtYR44bf7VMb1J8uQWpIsErhpCNNpLOZRBc1tE4A8Koi7anMNSR8DVNeyOs6ttOcMDEhaqwmMCUfrbsgIsuRE8oA7P9r-uQiXD7FA4X-mOC5EakcKEYXuFF7gTkw.UD8u25au7OCJQ7cz.WIH2iX3JGbNfK0W7lfrRfwzyb2KdPAW2DfpRKYZcfrIUT4bfsVuCsI6PSSSA1yT2pTbI13oGw3T8RlvYvOmpGd0DRkuuvx54Z9esKOVBcy7W6XFbflkL_tr7DrMLvAsbK5lhB_YMX-vXKB2nTRZ80s5bPNqF3NGu1X4bli1Q2PovrOfzbTS2jkRDzCdwLjhbwNTuym71gHdDFKFhL3v3uCRO5BO-gg_dQwseDDyHD6vU09xTOS8hjTpvK-l9IYWNABmvFMutRUo5IH5CiVw1jSKKDnN7j2L2UxKZ2m1NygXfRctgGWTHsnC83NMx0Uevxf5wgaZN8h4ToxZPThkySoUBSGrEXNqSlEHAPxsHwqhzXqzxksnlc6A24DMDFNMRkNBJkgtGbjtMyKf3TVnAqBGgiIARXTV4ktcZA3epwTg.s7LLthGdDirUuOITBwjSHw
+                required: true
     responses:
       200:
         description: Success

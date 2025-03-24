@@ -1,6 +1,6 @@
 # JWT Auth API Stack
 
-Este proyecto es un sistema de autenticación inspirado en AWS Cognito, implementado en Node.js y TypeScript. El sistema utiliza tokens cifrados (JWE) para el acceso y refresh de usuarios, gestión de usuarios (registro, login), rotación de claves RSA utilizando AWS Secrets Manager y almacenamiento de claves antiguas en MongoDB para permitir la descifrado de tokens emitidos antes de la rotación.
+Este proyecto es un sistema de autenticación inspirado en AWS Cognito, implementado en Node.js y TypeScript. El sistema utiliza tokens cifrados (JWE) para el acceso y refresh de usuarios, gestión de usuarios (registro, login), rotación de claves RSA utilizando AWS Secrets Manager y almacenamiento de claves antiguas en MongoDB para permitir el descifrado de tokens emitidos antes de la rotación.
 
 ## Características Principales
 
@@ -28,49 +28,83 @@ Este proyecto es un sistema de autenticación inspirado en AWS Cognito, implemen
 ## Estructura del Proyecto
 ```
 jwt-auth-api-stack/
+├── docs/
+│   ├── swagger/             # Documentación de la API (Swagger)
+│   ├── build-doc.ts         # Script para generar la documentación
+│   └── configuration.ts     # Configuración de Swagger
 ├── src/
 │   ├── config/
 │   │   └── environment.ts        # Variables de entorno y configuración
+│   ├── constants/
+│   │   └── index.ts              # Constantes y mensajes de error
 │   ├── db/
 │   │   └── connect.ts            # Conexión a MongoDB
-│   ├── models/
-│   │   ├── User.ts               # Modelo de usuario (incluye tokenVersion)
-│   │   ├── KeyRecord.ts          # Modelo para almacenar claves antiguas (rotación)
-│   │   └── RevokedToken.ts       # Modelo para tokens revocados (lista negra de jti)
-│   ├── services/
-│   │   ├── AwsSecretsManagerService.ts   # Interacción con AWS Secrets Manager
-│   │   ├── KeyRotationService.ts           # Lógica de rotación de claves RSA
-│   │   ├── KeyStoreService.ts              # Recupera la clave actual y por kid
-│   │   ├── AuthService.ts                  # Genera y descifra tokens JWE (incluye jti y tokenVersion)
-│   │   ├── UserService.ts                  # Gestión de usuarios (registro, login, revocación global con tokenVersion)
-│   │   └── TokenRevocationService.ts        # Funciones para revocar tokens individualmente (jti) y verificar revocación
-│   ├── middlewares/
-│   │   └── authJweMiddleware.ts             # Middleware para proteger rutas verificando tokens y tokenVersion
-│   ├── routes/
-│   │   ├── auth.route.ts      # Endpoints de autenticación (login, refresh, revoke token individual)
-│   │   ├── user.route.ts      # Endpoints de usuario (registro, perfil)
-│   │   └── admin.route.ts     # Endpoints administrativos (rotación de claves, revocación global)
+│   ├── entities/
+│   │   └── BuildTokens.ts        # Entidades para construir tokens JWE
 │   ├── jobs/
 │   │   └── rotate.job.ts      # Tarea programada (node-cron) para la rotación automática de claves
-│   └── index.ts               # Punto de entrada principal de la aplicación
+│   ├── lib/
+│   │   ├── controllers/
+│   │   │   ├── AuthController.ts    # Lógica de autenticación (login, refresh, revoke)
+│   │   │   └── UserController.ts    # Lógica de usuario(registro, perfil) 
+│   │   ├── repositories/
+│   │   │   ├── AuthRepository.ts             # Lógica de autenticación (login, refresh, revoke)
+│   │   │   ├── KeyStoreRepository.ts         # Lógica para recuperar claves RSA
+│   │   │   ├── TokenRevocationRepository.ts  # Lógica para revocar tokens (jti)
+│   │   │   └── UserRepository.ts             # Lógica de usuario (registro, perfil)
+│   │   ├── routers/
+│   │   │   ├── admin.ts   # Rutas administrativas (rotación de claves, revocación global)
+│   │   │   ├── auth.ts    # Rutas de autenticación (login, refresh, revoke token individual)
+│   │   │   ├── index.ts   # Agrupa todas las rutas
+│   │   │   └── user.ts    # Rutas de usuario (registro, perfil)
+│   │   ├── services/
+│   │   │   ├── AwsSecretsManagerConfigService.ts  # Cliente de Secrets Manager como singleton
+│   │   │   ├── AwsSecretsManagerService.ts        # Interacción con AWS Secrets Manager
+│   │   │   ├── KeyRotationService.ts              # Lógica de rotación de claves RSA
+│   │   │   └── TokenService.ts                    # Lógica de creación y validación de tokens JWE
+│   │   ├── KeyStoreService.ts                 # Recupera la clave actual y por kid
+│   │   ├── AuthService.ts                     # Genera y descifra tokens JWE (incluye jti y tokenVersion)
+│   │   ├── UserService.ts                     # Gestión de usuarios (registro, login, revocación global con tokenVersion)
+│   │   └── TokenRevocationService.ts          # Funciones para revocar tokens individualmente (jti) y verificar revocación
+│   ├── middlewares/
+│   │   └── AuthMiddleware.ts                  # Middleware para proteger rutas verificando tokens y tokenVersion
+│   ├── models/
+│   │   ├── KeyRecord.ts     # Modelo para almacenar claves antiguas (rotación)
+│   │   ├── RevokedToken.ts  # Modelo para tokens revocados (jti)
+│   │   ├── Session.ts       # Modelo para sesiones de usuario (refresh tokens)
+│   │   └── User.ts          # Modelo de usuario (incluye tokenVersion)
+│   ├── seeds/
+│   │   └── seedAdmin.ts     # Script para crear un usuario administrador
+│   ├── utils/
+│   │   ├── generateRandomPassword.ts     # Genera una contraseña aleatoria
+│   │   ├── parseDuration.ts              # Convierte una duración en segundos a un string de tiempo
+│   │   ├── removeExtension.ts            # Elimina la extensión de un archivo
+│   │   └── removeNumbersFromAString.ts   # Elimina los números de una cadena
+│   └── index.ts                          # Punto de entrada principal de la aplicación
+│   └── routers-setting.ts                # Configuración de rutas
+│   └── server-settings.ts                # Configuración del servidor
+├── .env.example               # Ejemplo de archivo de variables de entorno
+├── docker-compose.yml         # Configuración de Docker
 ├── nodemon.json               # Configuración de nodemon para desarrollo
 ├── package.json               # Dependencias y scripts
-├── tsconfig.json              # Configuración de TypeScript
-└── .env 
+└── tsconfig.json              # Configuración de TypeScript
+
 ```
 ## Instalación y Configuración
 
 ## Configuración y Variables de Entorno
 
-En el archivo `.env` se definen variables como:
+En el archivo `.env` se definen variables de entorno como en el archivo `.env.example`:
 ```
+MONGO_URI=mongodb://localhost:27017/mydb
 AWS_REGION=us-east-1
-SECRETS_NAME=myProject/jweKeyPair
-MONGODB_URI=mongodb://localhost:27017/mydb 
-KEY_ROTATION_DAYS=30 
-PORT=3000 
+AWS_ACCESS_KEY_ID=you_access_key_id_here
+AWS_SECRET_ACCESS_KEY=you_secret_access_key_here
+SECRETS_NAME=you_secrets_name_here 
+KEY_ROTATION_DAYS=30
 REFRESH_TOKEN_EXPIRATION=7d
 ACCESS_TOKEN_EXPIRATION=15m 
+PORT=3000 
 JWT_SECRET=your_jwt_secret_here
 ```
 
@@ -80,14 +114,21 @@ JWT_SECRET=your_jwt_secret_here
 
 ### Requisitos Previos
 - Node.js (versión 18 o superior)
-- MongoDB
+- Docker
 - Acceso a AWS Secrets Manager con las credenciales configuradas mediante variables de entorno
 
 ### Instalación
 1. Clona el repositorio.
 2. Instala las dependencias:
+3. Crea un archivo `.env` con las variables de entorno.
+4. Ejecuta el archivo docker-compose.yml para levantar la base de datos MongoDB.
+
 ```bash
    npm install
+```
+
+```bash
+   docker-compose up
 ```
 
 # Desarrollo
@@ -102,7 +143,11 @@ Para correr la aplicación en modo desarrollo (con recarga automática y uso de 
   "exec": "ts-node --esm -r dotenv/config src/index.ts"
 }
 ```
-2. Inicia la aplicación:
+2. Compila la documentación de la API (Swagger):
+```bash
+  npm run build-doc
+```
+3. Inicia la aplicación:
 ```bash
   npm run dev
   ````

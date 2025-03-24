@@ -30,7 +30,7 @@ export class KeyStoreRepository {
       return {kid: record.kid, privateKeyPem};
     } catch (error: any) {
       console.error("Error obteniendo la clave actual:", error.message);
-      throw new Error("No se pudo obtener la clave actual para cifrar/desencriptar.");
+      throw new Error(error.message);
     }
   }
 

@@ -1,105 +1,170 @@
 import {Request, Response} from "express";
 import {AuthRepository} from "../repositories/AuthRepository";
 import {KeyRotationService} from "../services/KeyRotationService";
-import {SecretsManagerClient} from "@aws-sdk/client-secrets-manager";
-import {AWS_ACCESS_KEY_ID, AWS_REGION, AWS_SECRET_ACCESS_KEY, SECRETS_NAME} from "../../config/environment";
-import {AwsSecretsManagerService} from "../services/AwsSecretsManagerService";
 import {UserRepository} from "../repositories/UserRepository";
 
 export class AuthController {
-  private static client = new SecretsManagerClient({
-    region: AWS_REGION,
-    credentials: {
-      accessKeyId: AWS_ACCESS_KEY_ID,
-      secretAccessKey: AWS_SECRET_ACCESS_KEY,
-    },
-  });
 
-  static async login(req: Request, res: Response) {
+  static async login(req: Request, res: Response):Promise<any> {
     try {
       const {email, password} = req.body;
+      if (!email || !password) {
+        return res.status(400).json({
+          statusCode: 400,
+          success: false,
+          statusText: "Email y contraseña son requeridos",
+          data: null
+        });
+      }
+
       const tokens = await AuthRepository.login(email, password);
-      res.json(tokens);
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText: 'Login exitoso',
+        data: tokens
+      });
+
     } catch (error: any) {
-      res.status(401).json({error: error.message});
+      return res.status(401).json({ statusCode: 401, success: false, statusText: error.message, data: null });
     }
   }
 
-  static async refreshToken(req: Request, res: Response) {
+  static async refreshToken(req: Request, res: Response):Promise<any> {
     try {
       const {refreshToken} = req.body;
+      if (!refreshToken) {
+        return res.status(400).json({
+          statusCode: 400,
+          success: false,
+          statusText: "refreshToken requerido",
+          data: null
+        });
+      }
       const tokens = await AuthRepository.refreshToken(refreshToken);
-      res.json(tokens);
+     return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText: 'Token refrescado exitosamente',
+        data: tokens
+      });
+
     } catch (error: any) {
-      res.status(403).json({error: error.message});
+      return res.status(403).json({ statusCode: 403, success: false, statusText: error.message, data: null });
     }
   }
 
-  static async revoke(req: Request, res: Response) {
+  static async revoke(req: Request, res: Response):Promise<any> {
     try {
       const {token} = req.body;
       if (!token) {
-        res.status(400).json({ok: false, error: "Token es requerido"});
+        return res.status(400).json({
+          statusCode: 400,
+          success: false,
+          statusText: "Token es requerido",
+          data: null
+        });
       }
-      const tokens = await AuthRepository.revoke(token);
-      res.json(tokens);
+      const response = await AuthRepository.revoke(token);
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText: response.message,
+        data: null
+      });
+
     } catch (error: any) {
-      res.status(403).json({error: error.message});
+      return res.status(403).json({ statusCode: 403, success: false, statusText: error.message, data: null });
     }
   }
 
-  static async changeCredentials(req: Request, res: Response) {
+  static async changeCredentials(req: Request, res: Response):Promise<any> {
     try {
       const userId = (req as any).userId; // Extraído del token JWT
       const {currentPassword, newEmail, newPassword} = req.body;
 
-      const result = await AuthRepository.changeCredentials(userId, currentPassword, newEmail, newPassword);
+      await AuthRepository.changeCredentials(userId, currentPassword, newEmail, newPassword);
       await UserRepository.revokeUserTokens(userId);
 
-      res.json(result);
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText: 'Credenciales cambiadas exitosamente',
+        data: null
+      });
+
     } catch (error: any) {
-      res.status(400).json({error: error.message});
+      return res.status(400).json({ statusCode: 400, success: false, statusText: error.message, data: null });
     }
   }
 
-  static async forceRotateKey(req: Request, res: Response) {
+  static async forceRotateKey(req: Request, res: Response):Promise<any> {
     try {
-      await KeyRotationService.rotateKeys();
-      res.json({ok: true, message: "Key rotation executed successfully"});
+      const response = await KeyRotationService.rotateKeys();
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText:response.message,
+        data: null
+      });
+
     } catch (error: any) {
-      res.status(500).json({ok: false, error: error.message});
+      return res.status(500).json({ statusCode: 500, success: false, statusText: error.message, data: null });
     }
   }
 
-  static async revokeAllUserTokens(req: Request, res: Response) {
+  static async revokeAllUserTokens(req: Request, res: Response):Promise<any> {
     try {
-      await AuthRepository.revokeAllUserTokens();
-      res.json({ok: true, message: "Tokens revocados para todos los usuarios"});
+      const response = await AuthRepository.revokeAllUserTokens();
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText: response.message,
+        data: null
+      });
+
     } catch (error: any) {
-      res.status(500).json({ok: false, error: error.message});
+      return res.status(500).json({ statusCode: 500, success: false, statusText: error.message, data: null });
     }
   }
 
-  static async deleteSecretManager(req: Request, res: Response) {
+  static async deleteSecretManager(req: Request, res: Response):Promise<any> {
     try {
       const response = await AuthRepository.deleteSecretManager();
-      res.json({ok: true, message: response.message});
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText: response.message,
+        data: null
+      });
+
     } catch (error: any) {
-      res.status(500).json({ok: false, error: error.message});
+      return res.status(500).json({ statusCode: 500, success: false, statusText: error.message, data: null });
     }
   }
 
-  static async logout(req: Request, res: Response) {
+  static async logout(req: Request, res: Response):Promise<any> {
     try {
       const accessToken = req.header("Authorization")?.replace("Bearer ", "");
       if (!accessToken) {
-        res.status(400).json({error: "Token requerido"});
+        return res.status(400).json({
+          statusCode: 400,
+          success: false,
+          statusText: "Token requerido",
+          data: null
+        });
       }
 
-      await AuthRepository.logout(accessToken as string);
-      res.json({ok: true, message: "Sesión cerrada"});
+      const response = await AuthRepository.logout(accessToken as string);
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        statusText: response.message,
+        data: null
+      });
+
     } catch (error: any) {
-      res.status(500).json({ok: false, error: error.message});
+      return res.status(500).json({ statusCode: 500, success: false, statusText: error.message, data: null });
     }
   }
 }

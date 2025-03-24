@@ -1,0 +1,13 @@
+/api/admin/revoke-all-tokens:
+ post:
+   tags:
+     - Admin
+   security:
+     - bearerAuth: []
+   produces:
+     - application/json
+   summary: Revocar todos los tokens de un usuario
+   description: Revoca todos los tokens de un usuario
+   responses:
+     200:
+       description: Un objeto JSON

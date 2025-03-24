@@ -1,0 +1,44 @@
+/api/user/register:
+ post:
+   tags:
+     - User
+   security:
+     - bearerAuth: []
+   produces:
+     - application/json
+   summary: Creación de usuario
+   description: Metodo para Crear un usuario
+   requestBody:
+     required: true
+     content:
+       application/json:
+         schema:
+           type: object
+           properties:
+             identification:
+               type: number
+               example: 123456780
+               required: true
+             firstName:
+               type: string
+               example: Juan
+               required: false
+             lastName:
+               type: string
+               example: Perez
+               required: true
+             password:
+               type: string
+               example: Test1234*
+               required: true
+             phone:
+               type: string
+               example: 3013362595
+               required: true
+             email:
+               type: string
+               example: juan.perez@example.com
+               required: true
+   responses:
+     200:
+       description: Un objeto JSON
